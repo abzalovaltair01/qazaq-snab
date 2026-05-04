@@ -1,4 +1,11 @@
 export default async function handler(req, res) {
+    // Устанавливаем заголовки безопасности
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
     const apiKey = "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";
     
     try {
@@ -9,25 +16,27 @@ export default async function handler(req, res) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "llama3-8b-8192",
+                // Поменял модель на чуть более мощную и стабильную
+                model: "llama-3.3-70b-versatile", 
                 messages: [
-                    { role: "system", content: "Ты снабженец в Казахстане. Отвечай строго в формате JSON: [{\"n\":\"товар\", \"p\":123}]. Цены в тенге." },
+                    { role: "system", content: "Ты снабженец в Казахстане. Дай цены в тенге на 2026 год. Отвечай ТОЛЬКО JSON массивом: [{\"n\":\"товар\", \"p\":12300}]." },
                     { role: "user", content: req.body.materials }
                 ],
-                temperature: 0
+                temperature: 0.1
             })
         });
 
         const data = await response.json();
-        
-        // Проверка: если Groq вернул ошибку (например, лимит ключа)
-        if (!data.choices || !data.choices[0]) {
-            console.error("Ошибка Groq API:", data);
-            return res.status(500).json({ error: "Нейронка не ответила. Проверьте логи сервера." });
+
+        if (!response.ok) {
+            // Если Groq ругается, мы передадим его ошибку на фронтенд
+            return res.status(response.status).json({ 
+                error: data.error?.message || "Ошибка API Groq" 
+            });
         }
 
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Ошибка сервера: " + error.message });
     }
 }
