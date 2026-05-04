@@ -3,147 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qazaq Snab AI — Проф. Смета</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>Qazaq Snab AI — Снабжение 2.0</title>
     <style>
-        :root { --primary: #611fdb; --bg: #f4f7fb; --card: #ffffff; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .app { width: 100%; max-width: 600px; }
+        :root { --primary: #611fdb; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .app { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
         
-        .main-card { background: var(--card); padding: 30px; border-radius: 32px; box-shadow: 0 15px 45px rgba(0,0,0,0.04); }
-        h1 { font-size: 24px; font-weight: 900; text-align: center; margin-bottom: 25px; }
+        h1 { font-size: 22px; text-align: center; color: #1a1a1a; margin-bottom: 20px; }
         h1 span { color: var(--primary); }
 
-        textarea, select { width: 100%; padding: 18px; border: 2px solid #edf2f7; border-radius: 20px; font-size: 16px; outline: none; box-sizing: border-box; margin-bottom: 15px; background: #f8fafc; transition: 0.3s; }
-        textarea:focus { border-color: var(--primary); background: #fff; }
+        textarea, select { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 16px; font-size: 16px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
+        .main-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
 
-        .btn-go { width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 20px; font-size: 17px; font-weight: 800; cursor: pointer; }
+        #result { display: none; margin-top: 25px; }
+        .item-block { border: 1px solid #f0f0f0; border-radius: 20px; padding: 15px; margin-bottom: 15px; background: #fafafa; }
+        .item-header { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         
-        /* Таблица/Карточки */
-        #result { display: none; margin-top: 30px; }
-        .mat-item { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; margin-bottom: 15px; }
-        .mat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
-        .mat-name { font-weight: 800; font-size: 16px; color: #1a202c; }
-        .mat-qty { background: #edf2f7; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; }
-
-        .offer-line { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; margin-bottom: 5px; background: #f8fafc; }
-        .offer-line.best { background: #f0fff4; border: 1px solid #c6f6d5; }
+        .offer-row { 
+            display: grid; grid-template-columns: 1fr 100px 90px; gap: 10px; 
+            padding: 10px; background: white; border-radius: 12px; margin-bottom: 6px; 
+            align-items: center; border: 1px solid transparent;
+        }
+        .offer-row.cheapest { border-color: #2ecc71; background: #fafffb; }
         
-        .store-name { font-size: 13px; font-weight: 600; }
-        .unit-price { font-size: 11px; color: #718096; display: block; }
-        .total-price { font-weight: 800; font-size: 14px; text-align: right; }
-        .buy-link { font-size: 10px; background: var(--primary); color: white; text-decoration: none; padding: 6px 10px; border-radius: 8px; font-weight: 700; }
+        .store-name { font-size: 12px; font-weight: 700; color: #444; }
+        .unit-p { font-size: 10px; color: #888; display: block; }
+        .total-p { font-weight: 900; text-align: right; color: #1a1a1a; }
+        .link-btn { font-size: 10px; background: #1a1a1a; color: white; text-decoration: none; padding: 8px; text-align: center; border-radius: 8px; }
 
-        .final-sum { background: #1a202c; color: white; padding: 25px; border-radius: 24px; margin-top: 25px; text-align: right; }
-        .final-sum small { opacity: 0.6; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .final-sum div { font-size: 28px; font-weight: 900; margin-top: 5px; }
-
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-sub { padding: 15px; border-radius: 15px; border: none; font-weight: 700; cursor: pointer; }
+        .summary-card { background: #1a1a1a; color: white; padding: 20px; border-radius: 20px; margin-top: 20px; text-align: right; }
+        .summary-card div { font-size: 24px; font-weight: 900; color: #2ecc71; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <div class="main-card">
-        <h1><span>Qazaq Snab</span> AI</h1>
-        
-        <select id="city">
-            <option value="Караганда">Караганда</option>
-            <option value="Астана">Астана</option>
-            <option value="Алматы">Алматы</option>
-        </select>
+    <h1><span>Qazaq Snab</span> AI</h1>
+    <select id="city">
+        <option value="Караганда">Караганда</option>
+        <option value="Астана">Астана</option>
+        <option value="Алматы">Алматы</option>
+    </select>
+    <textarea id="txt" rows="3" placeholder="300 кирпичей, 10 мешков ротбанда..."></textarea>
+    <button class="main-btn" id="btn" onclick="process()">ПОЛУЧИТЬ ЦЕНЫ</button>
 
-        <textarea id="txt" rows="3" placeholder="300 кирпичей, 5 мешков цемента..."></textarea>
-        <button class="btn-go" id="btn" onclick="calculate()">РАССЧИТАТЬ СМЕТУ</button>
-
-        <div id="result">
-            <div id="render"></div>
-            <div class="final-sum">
-                <small>Общая сумма закупа (MIN):</small>
-                <div id="grand-total">0 ₸</div>
-            </div>
-            <div class="actions">
-                <button class="btn-sub" style="background:#25d366; color:white;" onclick="toWA()">WhatsApp</button>
-                <button class="btn-sub" style="background:#edf2f7; color:#1a202c;" onclick="toPDF()">PDF Бланк</button>
-            </div>
+    <div id="result">
+        <div id="content"></div>
+        <div class="summary-card">
+            <small>ОБЩАЯ СУММА (ПО МИН. ЦЕНАМ):</small>
+            <div id="grand-total">0 ₸</div>
         </div>
     </div>
 </div>
 
 <script>
-let itemsData = [];
-
-async function calculate() {
-    const txt = document.getElementById("txt").value;
-    const city = document.getElementById("city").value;
+async function process() {
     const btn = document.getElementById("btn");
-    if(!txt) return;
-
-    btn.disabled = true;
-    btn.innerText = "ПОИСК И ПРОВЕРКА ЦЕН...";
-
+    btn.disabled = true; btn.innerText = "ЗАПРОС В МАГАЗИНЫ...";
+    
     try {
         const res = await fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ materials: txt, city: city })
+            body: JSON.stringify({ materials: document.getElementById("txt").value, city: document.getElementById("city").value })
         });
         const data = await res.json();
-        itemsData = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
+        const results = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
 
+        let finalTotal = 0;
         let html = "";
-        let totalAll = 0;
 
-        itemsData.forEach(item => {
-            // Математика: умножаем цену на количество
-            item.offers.forEach(o => o.total = o.p * item.q);
-            item.offers.sort((a, b) => a.total - b.total);
+        results.forEach(item => {
+            html += `<div class="item-block">
+                <div class="item-header"><span>${item.n}</span> <span>${item.q} ${item.u}</span></div>`;
             
-            totalAll += item.offers[0].total;
+            // Расчет сумм для каждого оффера
+            item.offers.forEach(o => o.fullPrice = o.p * item.q);
+            // Сортировка (дешевые в начало)
+            item.offers.sort((a, b) => a.fullPrice - b.fullPrice);
+            
+            finalTotal += item.offers[0].fullPrice;
 
-            html += `
-            <div class="mat-item">
-                <div class="mat-header">
-                    <span class="mat-name">${item.n}</span>
-                    <span class="mat-qty">${item.q} ${item.u}</span>
-                </div>`;
-            
-            item.offers.forEach((o, i) => {
-                const best = i === 0;
+            item.offers.forEach((o, idx) => {
+                const isMin = idx === 0;
                 html += `
-                <div class="offer-line ${best ? 'best' : ''}">
+                <div class="offer-row ${isMin ? 'cheapest' : ''}">
                     <div>
-                        <span class="store-name">${best ? '⭐ ' : ''}${o.m}</span>
-                        <span class="unit-price">${o.p.toLocaleString()} ₸ / ${item.u}</span>
+                        <span class="store-name">${o.m}</span>
+                        <span class="unit-p">${o.p.toLocaleString()} ₸/ед.</span>
                     </div>
-                    <div class="total-price">${o.total.toLocaleString()} ₸</div>
-                    <a href="${o.l}" target="_blank" class="buy-link">КУПИТЬ</a>
+                    <div class="total-p">${o.fullPrice.toLocaleString()} ₸</div>
+                    <a href="${o.l}" target="_blank" class="link-btn">${o.m === 'Kaspi' ? 'KASPI' : 'В МАГАЗИН'}</a>
                 </div>`;
             });
             html += `</div>`;
         });
 
-        document.getElementById("render").innerHTML = html;
-        document.getElementById("grand-total").innerText = totalAll.toLocaleString() + " ₸";
+        document.getElementById("content").innerHTML = html;
+        document.getElementById("grand-total").innerText = finalTotal.toLocaleString() + " ₸";
         document.getElementById("result").style.display = "block";
-    } catch (e) { alert("Ошибка данных. Попробуйте еще раз."); }
-    finally { btn.disabled = false; btn.innerText = "РАССЧИТАТЬ СМЕТУ"; }
-}
-
-function toPDF() {
-    const element = document.getElementById("render");
-    const opt = { margin: 10, filename: 'Smeta_Pro.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } };
-    html2pdf().set(opt).from(element).save();
-}
-
-function toWA() {
-    let msg = `*ОТЧЕТ ПО СМЕТЕ (${document.getElementById("city").value})*\n\n`;
-    itemsData.forEach(i => {
-        msg += `*${i.n}* (${i.q} ${i.u})\n✅ Цена: ${i.offers[0].total.toLocaleString()} ₸ (${i.offers[0].m})\n🔗 ${i.offers[0].l}\n\n`;
-    });
-    msg += `*ИТОГО: ${document.getElementById("grand-total").innerText}*`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    } catch (e) { alert("Ошибка! Попробуйте изменить запрос."); }
+    finally { btn.disabled = false; btn.innerText = "ПОЛУЧИТЬ ЦЕНЫ"; }
 }
 </script>
 </body>
