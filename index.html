@@ -3,90 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qazaq Snab AI</title>
+    <title>Qazaq Snab AI Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        h2 { color: #611fdb; text-align: center; margin-bottom: 20px; }
-        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; outline: none; transition: 0.3s; resize: none; }
-        textarea:focus { border-color: #611fdb; }
-        button { width: 100%; padding: 16px; background: #611fdb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #result { display: none; margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 15px; }
-        .total { margin-top: 20px; padding: 15px; background: #f4f0ff; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .wa-btn { background: #25D366; margin-top: 15px; }
+        :root { --main: #611fdb; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        h2 { color: var(--main); text-align: center; margin-top: 0; }
+        
+        .label { font-size: 14px; font-weight: bold; color: #64748b; margin-bottom: 8px; display: block; }
+        select, textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; margin-bottom: 20px; outline: none; box-sizing: border-box; }
+        select:focus, textarea:focus { border-color: var(--main); }
+        
+        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; margin-bottom: 10px; }
+        .btn-calc { background: var(--main); color: white; }
+        .btn-wa { background: #25D366; color: white; }
+        .btn-pdf { background: #ef4444; color: white; }
+        
+        #result { display: none; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .link { color: var(--main); text-decoration: none; font-size: 12px; font-weight: bold; }
+        .total-area { background: #f1f5f9; padding: 20px; border-radius: 12px; text-align: right; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🇰🇿 Qazaq Snab AI</h2>
-    <textarea id="txt" placeholder="Напишите список материалов (например: 5 мешков цемента, лопата)..."></textarea>
-    <button id="btn" onclick="calc()">РАССЧИТАТЬ СТОИМОСТЬ</button>
+    <h2>🇰🇿 Qazaq Snab AI Pro</h2>
+    
+    <label class="label">ВЫБЕРИТЕ ГОРОД:</label>
+    <select id="city">
+        <option value="Караганда">Караганда</option>
+        <option value="Астана">Астана</option>
+        <option value="Алматы">Алматы</option>
+        <option value="Шымкент">Шымкент</option>
+    </select>
+
+    <label class="label">СПИСОК МАТЕРИАЛОВ:</label>
+    <textarea id="txt" placeholder="Напр: 10 мешков цемента, арматура 12мм 50 метров..."></textarea>
+    
+    <button id="btn" class="btn-calc" onclick="calc()">НАЙТИ ЛУЧШИЕ ЦЕНЫ</button>
 
     <div id="result">
-        <table id="table"></table>
-        <div class="total">
-            <span>ИТОГО:</span>
-            <span id="total" style="color: #611fdb; font-size: 20px;">0 ₸</span>
+        <div id="pdf-content">
+            <h3 style="color: #611fdb;">Смета: <span id="res-city"></span></h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Магазин</th>
+                        <th>Цена</th>
+                        <th>Ссылка</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            <div class="total-area">
+                ИТОГО: <span id="total-sum">0 ₸</span>
+            </div>
         </div>
-        <button class="wa-btn" onclick="sendWA()">ОТПРАВИТЬ В WHATSAPP</button>
+        
+        <button class="btn-wa" onclick="sendWA()">ОТПРАВИТЬ В WHATSAPP</button>
+        <button class="btn-pdf" onclick="downloadPDF()">СОХРАНИТЬ PDF</button>
     </div>
 </div>
 
 <script>
 async function calc() {
     const txt = document.getElementById("txt").value;
+    const city = document.getElementById("city").value;
     const btn = document.getElementById("btn");
     
     if(!txt) return alert("Введите список материалов");
 
     btn.disabled = true;
-    btn.innerText = "РАБОТАЕМ...";
+    btn.innerText = "ИЩЕМ ЛУЧШИЕ ПРЕДЛОЖЕНИЯ...";
 
     try {
         const res = await fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ materials: txt })
+            body: JSON.stringify({ materials: txt, city: city })
         });
         
         const data = await res.json();
-
-        if (data.error) throw new Error(data.error);
-
         const content = data.choices[0].message.content;
-        const match = content.match(/\[.*\]/s);
-        if (!match) throw new Error("ИИ прислал текст вместо таблицы");
-        
-        const items = JSON.parse(match[0]);
+        const items = JSON.parse(content.match(/\[.*\]/s)[0]);
 
         let sum = 0;
         let html = "";
         items.forEach(i => {
             sum += i.p;
-            html += `<tr><td>${i.n}</td><td style="text-align:right; font-weight:600;">${i.p.toLocaleString()} ₸</td></tr>`;
+            html += `<tr>
+                <td><b>${i.n}</b></td>
+                <td>${i.m}</td>
+                <td>${i.p.toLocaleString()} ₸</td>
+                <td><a href="${i.l}" class="link" target="_blank">КУПИТЬ</a></td>
+            </tr>`;
         });
 
-        document.getElementById("table").innerHTML = html;
-        document.getElementById("total").innerText = sum.toLocaleString() + " ₸";
+        document.getElementById("res-city").innerText = city;
+        document.getElementById("table-body").innerHTML = html;
+        document.getElementById("total-sum").innerText = sum.toLocaleString() + " ₸";
         document.getElementById("result").style.display = "block";
     } catch (e) {
-        alert("Ошибка: " + e.message);
-        console.error(e);
+        alert("Ошибка связи с ИИ. Попробуйте еще раз.");
     } finally {
         btn.disabled = false;
-        btn.innerText = "РАССЧИТАТЬ СТОИМОСТЬ";
+        btn.innerText = "НАЙТИ ЛУЧШИЕ ЦЕНЫ";
     }
 }
 
+function downloadPDF() {
+    const element = document.getElementById('pdf-content');
+    const city = document.getElementById("city").value;
+    html2pdf().from(element).set({
+        margin: 10,
+        filename: `Smeta_${city}.pdf`,
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).save();
+}
+
 function sendWA() {
-    let t = "*Смета Qazaq Snab AI*\n\n";
-    document.querySelectorAll("#table tr").forEach(r => t += "• " + r.innerText + "\n");
-    t += "\n*ИТОГО: " + document.getElementById("total").innerText + "*";
-    window.open("https://wa.me/?text=" + encodeURIComponent(t));
+    let t = `*Смета Qazaq Snab (${document.getElementById("city").value})*\n\n`;
+    document.querySelectorAll("#table-body tr").forEach(r => {
+        const td = r.querySelectorAll("td");
+        t += `• ${td[0].innerText}: ${td[2].innerText} (${td[1].innerText})\n`;
+    });
+    t += `\n*ИТОГО: ${document.getElementById("total-sum").innerText}*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(t)}`);
 }
 </script>
 
