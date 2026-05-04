@@ -3,73 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qazaq Snab AI — Снабжение без купюр</title>
+    <title>Snab AI — Точный расчет</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #611fdb; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .app { width: 100%; max-width: 550px; background: white; padding: 25px; border-radius: 28px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        :root { --primary: #611fdb; --bg: #f4f7fb; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 15px; margin: 0; display: flex; justify-content: center; }
+        .app { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         
-        h1 { text-align: center; font-weight: 900; margin-bottom: 20px; font-size: 24px; }
-        h1 span { color: var(--primary); }
+        textarea, select { width: 100%; padding: 15px; border: 2px solid #edf2f7; border-radius: 15px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        .btn-go { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer; }
 
-        textarea, select { width: 100%; padding: 16px; border: 2px solid #edf2f7; border-radius: 16px; font-size: 16px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
-        .btn-main { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; margin-bottom: 20px; }
+        .mat-card { border: 1px solid #f1f5f9; border-radius: 20px; padding: 15px; margin-top: 20px; }
+        .mat-title { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        
+        .offer-row { display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px; align-items: center; padding: 10px; background: #f8fafc; border-radius: 12px; margin-bottom: 5px; }
+        .offer-row.best { border: 1px solid #2ecc71; background: #f0fff4; }
+        
+        .store-name { font-size: 12px; font-weight: 700; }
+        .price-total { font-weight: 900; text-align: right; font-size: 14px; }
+        .link-btn { font-size: 10px; background: #1a202c; color: white; text-decoration: none; padding: 7px; text-align: center; border-radius: 8px; font-weight: 700; }
 
-        .item-card { border: 1px solid #f1f5f9; border-radius: 20px; padding: 15px; margin-bottom: 15px; background: #fff; }
-        .item-card h3 { margin: 0 0 12px 0; font-size: 16px; display: flex; justify-content: space-between; }
+        .total-banner { background: #1a202c; color: white; padding: 20px; border-radius: 20px; margin-top: 20px; }
+        .total-banner b { font-size: 24px; color: #2ecc71; display: block; margin-top: 5px; }
         
-        .offer { display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 12px; margin-bottom: 6px; align-items: center; border: 1px solid transparent; }
-        .offer.best { background: #f0fff4; border-color: #c6f6d5; }
-        
-        .store-info b { font-size: 13px; display: block; color: #1a202c; }
-        .store-info span { font-size: 11px; color: #a0aec0; }
-        .price-total { font-weight: 800; text-align: right; color: #1a202c; font-size: 14px; }
-        .buy-btn { font-size: 10px; background: #1a202c; color: white; text-decoration: none; padding: 7px; text-align: center; border-radius: 8px; font-weight: 700; }
-
-        .summary { background: #1a202c; color: white; padding: 25px; border-radius: 22px; margin-top: 20px; }
-        .summary-total { font-size: 28px; font-weight: 900; color: #2ecc71; margin-top: 5px; }
-        
-        .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-action { padding: 15px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn-action { padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <h1><span>Qazaq Snab</span> AI</h1>
-    
-    <select id="city">
-        <option value="Караганда">Караганда</option>
-        <option value="Астана">Астана</option>
-        <option value="Алматы">Алматы</option>
-    </select>
-    
-    <textarea id="txt" rows="3" placeholder="Напр: 300 кирпичей, 5 мешков цемента..."></textarea>
-    <button class="btn-main" id="btn" onclick="run()">ПОЛУЧИТЬ ТОЧНУЮ СМЕТУ</button>
+    <h2 style="text-align:center">Qazaq Snab AI</h2>
+    <select id="city"><option>Караганда</option><option>Астана</option><option>Алматы</option></select>
+    <textarea id="txt" rows="3" placeholder="Напр: 300 кирпичей..."></textarea>
+    <button class="btn-go" id="btn" onclick="start()">ПОЛУЧИТЬ ЦЕНЫ</button>
 
-    <div id="res-box" style="display:none;">
-        <div id="output"></div>
-        
-        <div class="summary">
-            <small>ИТОГО ПО ЛУЧШИМ ЦЕНАМ:</small>
-            <div id="grand-total" class="summary-total">0 ₸</div>
-        </div>
-
-        <div class="action-row">
-            <button class="btn-action" style="background:#25d366; color:white;" onclick="shareWA()">WhatsApp</button>
-            <button class="btn-action" style="background:#edf2f7; color:#111;" onclick="makePDF()">Скачать PDF</button>
+    <div id="res" style="display:none">
+        <div id="render"></div>
+        <div class="total-banner">ИТОГО ПО ЛУЧШЕЙ ЦЕНЕ: <b id="gtotal">0 ₸</b></div>
+        <div class="actions">
+            <button class="btn-action" style="background:#25d366; color:white" onclick="sendWA()">WhatsApp</button>
+            <button class="btn-action" style="background:#eee" onclick="getPDF()">Скачать PDF</button>
         </div>
     </div>
 </div>
 
 <script>
-let currentData = [];
-
-async function run() {
+let itemsData = [];
+async function start() {
     const btn = document.getElementById("btn");
-    btn.disabled = true; btn.innerText = "ПРОВЕРКА ЦЕН...";
-    
+    btn.innerText = "ИЩЕМ..."; btn.disabled = true;
     try {
         const res = await fetch("/api/calculate", {
             method: "POST",
@@ -77,49 +60,39 @@ async function run() {
             body: JSON.stringify({ materials: document.getElementById("txt").value, city: document.getElementById("city").value })
         });
         const data = await res.json();
-        currentData = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
+        itemsData = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
 
-        let gTotal = 0;
-        let html = "";
-
-        currentData.forEach(item => {
-            // Математика без округлений
-            item.offers.forEach(o => o.sum = Math.round((o.p * item.q) * 100) / 100);
+        let html = "", totalAll = 0;
+        itemsData.forEach(item => {
+            item.offers.forEach(o => o.sum = o.p * item.q);
             item.offers.sort((a, b) => a.sum - b.sum);
-            gTotal += item.offers[0].sum;
+            totalAll += item.offers[0].sum;
 
-            html += `<div class="item-card">
-                <h3><span>${item.n}</span> <span>${item.q} ${item.u}</span></h3>`;
-            
+            html += `<div class="mat-card"><div class="mat-title"><span>${item.n}</span><span>${item.q} ${item.u}</span></div>`;
             item.offers.forEach((o, i) => {
-                html += `
-                <div class="offer ${i === 0 ? 'best' : ''}">
-                    <div class="store-info"><b>${o.m}</b><span>${o.p} ₸/ед</span></div>
+                html += `<div class="offer-row ${i===0?'best':''}">
+                    <div><div class="store-name">${o.m}</div><small>${o.p} ₸/ед</small></div>
                     <div class="price-total">${o.sum.toLocaleString()} ₸</div>
-                    <a href="${o.l}" target="_blank" class="buy-btn">К ТОВАРУ</a>
+                    <a href="${o.l}" target="_blank" class="link-btn">К ТОВАРУ</a>
                 </div>`;
             });
             html += `</div>`;
         });
-
-        document.getElementById("output").innerHTML = html;
-        document.getElementById("grand-total").innerText = Math.round(gTotal).toLocaleString() + " ₸";
-        document.getElementById("res-box").style.display = "block";
-    } catch (e) { alert("Ошибка. Попробуйте еще раз."); }
-    finally { btn.disabled = false; btn.innerText = "ПОЛУЧИТЬ ТОЧНУЮ СМЕТУ"; }
+        document.getElementById("render").innerHTML = html;
+        document.getElementById("gtotal").innerText = totalAll.toLocaleString() + " ₸";
+        document.getElementById("res").style.display = "block";
+    } catch(e) { alert("Ошибка. Попробуйте еще раз."); }
+    finally { btn.innerText = "ПОЛУЧИТЬ ЦЕНЫ"; btn.disabled = false; }
 }
 
-function shareWA() {
-    let text = `*СМЕТА: ${document.getElementById("city").value}*\n\n`;
-    currentData.forEach(i => text += `• ${i.n}: *${i.offers[0].sum.toLocaleString()} ₸*\n🔗 ${i.offers[0].l}\n\n`);
-    text += `*ИТОГО: ${document.getElementById("grand-total").innerText}*`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+function sendWA() {
+    let m = `*СМЕТА (${document.getElementById("city").value})*\n\n`;
+    itemsData.forEach(i => m += `• ${i.n}: *${i.offers[0].sum.toLocaleString()} ₸*\n🔗 ${i.offers[0].l}\n\n`);
+    m += `*ИТОГО: ${document.getElementById("gtotal").innerText}*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
 }
 
-function makePDF() {
-    const el = document.getElementById("output");
-    html2pdf().from(el).save('Smeta_Build.pdf');
-}
+function getPDF() { html2pdf().from(document.getElementById("render")).save('Smeta.pdf'); }
 </script>
 </body>
 </html>
