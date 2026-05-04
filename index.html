@@ -1,8 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qazaq Snab AI</title>
+    <style>
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        h2 { color: #611fdb; text-align: center; margin-bottom: 20px; }
+        textarea { width: 100%; height: 100px; padding: 12px; border: 2px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; outline: none; transition: 0.3s; resize: none; }
+        textarea:focus { border-color: #611fdb; }
+        button { width: 100%; padding: 16px; background: #611fdb; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #result { display: none; margin-top: 25px; border-top: 2px dashed #eee; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 10px 0; border-bottom: 1px solid #f9f9f9; font-size: 15px; }
+        .total { margin-top: 20px; padding: 15px; background: #f4f0ff; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .wa-btn { background: #25D366; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🇰🇿 Qazaq Snab AI</h2>
+    <textarea id="txt" placeholder="Напишите список материалов (например: 5 мешков цемента, лопата)..."></textarea>
+    <button id="btn" onclick="calc()">РАССЧИТАТЬ СТОИМОСТЬ</button>
+
+    <div id="result">
+        <table id="table"></table>
+        <div class="total">
+            <span>ИТОГО:</span>
+            <span id="total" style="color: #611fdb; font-size: 20px;">0 ₸</span>
+        </div>
+        <button class="wa-btn" onclick="sendWA()">ОТПРАВИТЬ В WHATSAPP</button>
+    </div>
+</div>
+
+<script>
 async function calc() {
     const txt = document.getElementById("txt").value;
     const btn = document.getElementById("btn");
     
-    if(!txt) return alert("Введите список");
+    if(!txt) return alert("Введите список материалов");
 
     btn.disabled = true;
     btn.innerText = "РАБОТАЕМ...";
@@ -16,9 +55,7 @@ async function calc() {
         
         const data = await res.json();
 
-        // Проверяем, есть ли данные в ответе
         if (data.error) throw new Error(data.error);
-        if (!data.choices) throw new Error("Сервер вернул пустой ответ");
 
         const content = data.choices[0].message.content;
         const match = content.match(/\[.*\]/s);
@@ -30,17 +67,28 @@ async function calc() {
         let html = "";
         items.forEach(i => {
             sum += i.p;
-            html += `<tr><td>${i.n}</td><td style="text-align:right;">${i.p.toLocaleString()} ₸</td></tr>`;
+            html += `<tr><td>${i.n}</td><td style="text-align:right; font-weight:600;">${i.p.toLocaleString()} ₸</td></tr>`;
         });
 
         document.getElementById("table").innerHTML = html;
-        document.getElementById("total").innerText = "ИТОГО: " + sum.toLocaleString() + " ₸";
+        document.getElementById("total").innerText = sum.toLocaleString() + " ₸";
         document.getElementById("result").style.display = "block";
     } catch (e) {
         alert("Ошибка: " + e.message);
-        console.log("Полный ответ сервера:", e);
+        console.error(e);
     } finally {
         btn.disabled = false;
-        btn.innerText = "РАССЧИТАТЬ";
+        btn.innerText = "РАССЧИТАТЬ СТОИМОСТЬ";
     }
 }
+
+function sendWA() {
+    let t = "*Смета Qazaq Snab AI*\n\n";
+    document.querySelectorAll("#table tr").forEach(r => t += "• " + r.innerText + "\n");
+    t += "\n*ИТОГО: " + document.getElementById("total").innerText + "*";
+    window.open("https://wa.me/?text=" + encodeURIComponent(t));
+}
+</script>
+
+</body>
+</html>
