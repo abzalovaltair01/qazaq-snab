@@ -3,96 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snab AI — Точный расчет</title>
+    <title>Qazaq Snab AI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #611fdb; --bg: #f4f7fb; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 15px; margin: 0; display: flex; justify-content: center; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; justify-content: center; }
         .app { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         
+        h1 { text-align: center; font-size: 22px; margin-bottom: 20px; }
+        h1 span { color: var(--primary); }
+
         textarea, select { width: 100%; padding: 15px; border: 2px solid #edf2f7; border-radius: 15px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        .btn-go { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer; }
+        .btn-main { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer; }
 
-        .mat-card { border: 1px solid #f1f5f9; border-radius: 20px; padding: 15px; margin-top: 20px; }
-        .mat-title { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .mat-card { border: 1px solid #f1f5f9; border-radius: 20px; padding: 15px; margin-top: 20px; background: #fff; }
+        .mat-header { display: flex; justify-content: space-between; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px; }
         
-        .offer-row { display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px; align-items: center; padding: 10px; background: #f8fafc; border-radius: 12px; margin-bottom: 5px; }
-        .offer-row.best { border: 1px solid #2ecc71; background: #f0fff4; }
+        .offer { display: grid; grid-template-columns: 1fr 100px 80px; gap: 8px; align-items: center; padding: 10px; background: #f8fafc; border-radius: 12px; margin-bottom: 5px; }
+        .offer.best { border: 1px solid #2ecc71; background: #f0fff4; }
         
-        .store-name { font-size: 12px; font-weight: 700; }
-        .price-total { font-weight: 900; text-align: right; font-size: 14px; }
-        .link-btn { font-size: 10px; background: #1a202c; color: white; text-decoration: none; padding: 7px; text-align: center; border-radius: 8px; font-weight: 700; }
+        .store-info b { font-size: 12px; display: block; }
+        .store-info span { font-size: 10px; color: #a0aec0; }
+        .price-val { font-weight: 900; text-align: right; font-size: 14px; }
+        .link-btn { font-size: 10px; background: #1a202c; color: white; text-decoration: none; padding: 8px; text-align: center; border-radius: 8px; font-weight: 700; }
+        .link-btn.none { background: #cbd5e0; pointer-events: none; }
 
-        .total-banner { background: #1a202c; color: white; padding: 20px; border-radius: 20px; margin-top: 20px; }
-        .total-banner b { font-size: 24px; color: #2ecc71; display: block; margin-top: 5px; }
+        .summary { background: #1a202c; color: white; padding: 20px; border-radius: 22px; margin-top: 20px; text-align: center; }
+        .summary div { font-size: 26px; font-weight: 900; color: #2ecc71; margin-top: 5px; }
         
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn-action { padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-sub { padding: 16px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <h2 style="text-align:center">Qazaq Snab AI</h2>
+    <h1><span>Qazaq Snab</span> AI</h1>
     <select id="city"><option>Караганда</option><option>Астана</option><option>Алматы</option></select>
-    <textarea id="txt" rows="3" placeholder="Напр: 300 кирпичей..."></textarea>
-    <button class="btn-go" id="btn" onclick="start()">ПОЛУЧИТЬ ЦЕНЫ</button>
+    <textarea id="txt" rows="3" placeholder="300 кирпичей, 10 мешков ротбанда..."></textarea>
+    <button class="btn-main" id="btn" onclick="calc()">ПОЛУЧИТЬ СМЕТУ</button>
 
-    <div id="res" style="display:none">
-        <div id="render"></div>
-        <div class="total-banner">ИТОГО ПО ЛУЧШЕЙ ЦЕНЕ: <b id="gtotal">0 ₸</b></div>
+    <div id="res-area" style="display:none">
+        <div id="output"></div>
+        <div class="summary">ОБЩИЙ ИТОГ (MIN): <div id="total-sum">0 ₸</div></div>
         <div class="actions">
-            <button class="btn-action" style="background:#25d366; color:white" onclick="sendWA()">WhatsApp</button>
-            <button class="btn-action" style="background:#eee" onclick="getPDF()">Скачать PDF</button>
+            <button class="btn-sub" style="background:#25d366; color:white" onclick="shareWA()">WhatsApp</button>
+            <button class="btn-sub" style="background:#eee" onclick="savePDF()">Скачать PDF</button>
         </div>
     </div>
 </div>
 
 <script>
-let itemsData = [];
-async function start() {
+let lastItems = [];
+
+async function calc() {
     const btn = document.getElementById("btn");
-    btn.innerText = "ИЩЕМ..."; btn.disabled = true;
+    btn.innerText = "ИЩЕМ В МАГАЗИНАХ..."; btn.disabled = true;
+    
     try {
-        const res = await fetch("/api/calculate", {
+        const response = await fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ materials: document.getElementById("txt").value, city: document.getElementById("city").value })
         });
-        const data = await res.json();
-        itemsData = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
+        const data = await response.json();
+        lastItems = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
 
-        let html = "", totalAll = 0;
-        itemsData.forEach(item => {
-            item.offers.forEach(o => o.sum = o.p * item.q);
-            item.offers.sort((a, b) => a.sum - b.sum);
-            totalAll += item.offers[0].sum;
+        let html = "", grandTotal = 0;
 
-            html += `<div class="mat-card"><div class="mat-title"><span>${item.n}</span><span>${item.q} ${item.u}</span></div>`;
+        lastItems.forEach(item => {
+            // Фильтруем и считаем только реальные цены
+            item.offers.forEach(o => {
+                o.isReal = o.p && o.p !== "н/д" && !isNaN(o.p);
+                o.total = o.isReal ? o.p * item.q : Infinity;
+            });
+            
+            item.offers.sort((a, b) => a.total - b.total);
+            const bestOffer = item.offers[0].isReal ? item.offers[0].total : 0;
+            grandTotal += bestOffer;
+
+            html += `<div class="mat-card"><div class="mat-header"><span>${item.n}</span><span>${item.q} ${item.u}</span></div>`;
+            
             item.offers.forEach((o, i) => {
-                html += `<div class="offer-row ${i===0?'best':''}">
-                    <div><div class="store-name">${o.m}</div><small>${o.p} ₸/ед</small></div>
-                    <div class="price-total">${o.sum.toLocaleString()} ₸</div>
-                    <a href="${o.l}" target="_blank" class="link-btn">К ТОВАРУ</a>
+                const isBest = i === 0 && o.isReal;
+                html += `
+                <div class="offer ${isBest ? 'best' : ''}">
+                    <div class="store-info"><b>${o.m}</b><span>${o.isReal ? o.p + ' ₸/ед' : 'Нет данных'}</span></div>
+                    <div class="price-val">${o.isReal ? o.total.toLocaleString() + ' ₸' : '---'}</div>
+                    <a href="${o.l}" target="_blank" class="link-btn ${o.isReal ? '' : 'none'}">${o.isReal ? 'ПРОВЕРИТЬ' : 'НЕТ'}</a>
                 </div>`;
             });
             html += `</div>`;
         });
-        document.getElementById("render").innerHTML = html;
-        document.getElementById("gtotal").innerText = totalAll.toLocaleString() + " ₸";
-        document.getElementById("res").style.display = "block";
-    } catch(e) { alert("Ошибка. Попробуйте еще раз."); }
-    finally { btn.innerText = "ПОЛУЧИТЬ ЦЕНЫ"; btn.disabled = false; }
+
+        document.getElementById("output").innerHTML = html;
+        document.getElementById("total-sum").innerText = grandTotal.toLocaleString() + " ₸";
+        document.getElementById("res-area").style.display = "block";
+    } catch (e) { alert("Ошибка запроса. Попробуйте проще."); }
+    finally { btn.innerText = "ПОЛУЧИТЬ СМЕТУ"; btn.disabled = false; }
 }
 
-function sendWA() {
-    let m = `*СМЕТА (${document.getElementById("city").value})*\n\n`;
-    itemsData.forEach(i => m += `• ${i.n}: *${i.offers[0].sum.toLocaleString()} ₸*\n🔗 ${i.offers[0].l}\n\n`);
-    m += `*ИТОГО: ${document.getElementById("gtotal").innerText}*`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(m)}`);
+function shareWA() {
+    let t = `*СМЕТА СТРОЙКИ*\n\n`;
+    lastItems.forEach(i => {
+        const best = i.offers.find(o => o.isReal);
+        if(best) t += `• ${i.n}: *${best.total.toLocaleString()} ₸* (${best.m})\n`;
+    });
+    t += `\n*ИТОГО: ${document.getElementById("total-sum").innerText}*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(t)}`);
 }
 
-function getPDF() { html2pdf().from(document.getElementById("render")).save('Smeta.pdf'); }
+function savePDF() {
+    const el = document.getElementById("output");
+    html2pdf().from(el).save('Smeta_AI.pdf');
+}
 </script>
 </body>
 </html>
