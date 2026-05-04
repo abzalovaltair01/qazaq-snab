@@ -3,106 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qazaq Snab AI Pro</title>
+    <title>Qazaq Snab AI</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #611fdb; --bg: #f8f9fc; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .container { width: 100%; max-width: 700px; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); }
+        :root { --primary: #611fdb; --bg: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
         
-        h1 { font-size: 26px; text-align: center; font-weight: 800; margin-bottom: 25px; }
+        h1 { font-size: 24px; text-align: center; margin-bottom: 25px; font-weight: 800; }
         h1 span { color: var(--primary); }
 
-        .f-box { margin-bottom: 20px; }
-        label { font-size: 11px; font-weight: 800; color: #a0aec0; margin-left: 15px; margin-bottom: 6px; display: block; text-transform: uppercase; }
-        select, textarea { width: 100%; padding: 16px; border: 2px solid #edf2f7; border-radius: 18px; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; }
-        select:focus, textarea:focus { border-color: var(--primary); background: #fff; }
-
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 18px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
-        .btn-calc { background: var(--primary); color: white; }
+        select, textarea { 
+            width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 18px; 
+            font-size: 16px; margin-bottom: 15px; outline: none; box-sizing: border-box; background: #fafafa;
+        }
+        
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 18px; 
+            font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: 0.2s;
+        }
+        .btn-main { background: var(--primary); color: white; }
         .btn-wa { background: #25d366; color: white; }
-        .btn-pdf { background: #1a202c; color: white; }
-        button:disabled { opacity: 0.5; }
+        .btn-pdf { background: #111; color: white; }
 
-        /* Таблица на сайте */
-        #result { display: none; margin-top: 30px; }
-        .main-table { width: 100%; border-collapse: collapse; }
-        .main-table td { padding: 15px 10px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
-        .buy-link { font-size: 11px; color: var(--primary); text-decoration: none; font-weight: 800; border: 1px solid var(--primary); padding: 4px 8px; border-radius: 6px; }
-        .total-box { background: #f8f6ff; padding: 20px; border-radius: 20px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .total-price { font-size: 22px; font-weight: 900; color: var(--primary); }
+        /* Адаптивный дизайн таблицы */
+        #result { display: none; margin-top: 25px; }
+        .item-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 0; border-bottom: 1px solid #eee; 
+        }
+        .item-info b { display: block; font-size: 15px; margin-bottom: 4px; }
+        .item-info span { font-size: 12px; color: #888; }
+        .item-price { text-align: right; }
+        .price-val { display: block; font-weight: 800; color: #000; margin-bottom: 5px; }
+        .buy-btn { 
+            font-size: 10px; padding: 5px 10px; border: 1px solid var(--primary); 
+            color: var(--primary); text-decoration: none; border-radius: 8px; font-weight: 700;
+        }
 
-        /* Скрытый шаблон для PDF */
-        #pdf-template { display: none; }
+        .total-box { 
+            background: #f4f0ff; padding: 20px; border-radius: 20px; 
+            margin: 20px 0; display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        /* PDF только для генератора */
+        #pdf-hide { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1><span>Qazaq</span> Snab AI</h1>
+<div class="app">
+    <h1><span>Qazaq</span> Snab</h1>
     
-    <div class="f-box">
-        <label>Выберите город</label>
-        <select id="city">
-            <option value="Караганда">Караганда</option>
-            <option value="Астана">Астана</option>
-            <option value="Алматы">Алматы</option>
-            <option value="Шымкент">Шымкент</option>
-        </select>
-    </div>
+    <select id="city">
+        <option value="Караганда">Караганда</option>
+        <option value="Астана">Астана</option>
+        <option value="Алматы">Алматы</option>
+        <option value="Шымкент">Шымкент</option>
+    </select>
 
-    <div class="f-box">
-        <label>Список материалов</label>
-        <textarea id="txt" rows="4" placeholder="Введите список через запятую..."></textarea>
-    </div>
+    <textarea id="txt" rows="3" placeholder="Что нужно купить? (напр. 5 мешков цемента)"></textarea>
     
-    <button id="btn" class="btn btn-calc" onclick="calc()">ПОЛУЧИТЬ ТОЧНУЮ СМЕТУ</button>
+    <button id="btn" class="btn btn-main" onclick="calc()">РАССЧИТАТЬ</button>
 
     <div id="result">
-        <table class="main-table" id="web-table-body"></table>
+        <div id="items-list"></div>
         <div class="total-box">
-            <span style="font-weight: 700;">ИТОГО:</span>
-            <span class="total-price" id="total-val">0 ₸</span>
+            <b>ИТОГО:</b>
+            <span id="total-val" style="font-size: 20px; font-weight: 900; color: var(--primary);">0 ₸</span>
         </div>
         
-        <div style="margin-top: 25px;">
-            <button class="btn btn-wa" onclick="sendWA()">ОТПРАВИТЬ В WHATSAPP</button>
-            <button class="btn btn-pdf" onclick="downloadPDF()">СОХРАНИТЬ PDF БЛАНК</button>
-        </div>
+        <button class="btn btn-wa" onclick="sendWA()">WHATSAPP</button>
+        <button class="btn btn-pdf" onclick="downloadPDF()">PDF ДОКУМЕНТ</button>
     </div>
 </div>
 
-<div id="pdf-template">
-    <div style="padding: 50px; font-family: Arial, sans-serif;">
-        <div style="display: flex; justify-content: space-between; border-bottom: 3px solid #611fdb; padding-bottom: 10px;">
-            <h1 style="margin:0; color:#611fdb;">СМЕТА ЗАКУПА</h1>
-            <div style="text-align: right; font-size: 12px; color: #666;">
-                <b>Регион:</b> <span id="pdf-city"></span><br>
-                <b>Дата:</b> 04.05.2026
-            </div>
-        </div>
-        
-        <table style="width: 100%; border-collapse: collapse; margin-top: 30px;">
-            <thead>
-                <tr style="background: #f8f9fc;">
-                    <th style="padding: 12px; border: 1px solid #eee; text-align: left;">Наименование</th>
-                    <th style="padding: 12px; border: 1px solid #eee; text-align: center;">Кол-во</th>
-                    <th style="padding: 12px; border: 1px solid #eee; text-align: right;">Магазин / Ссылка</th>
-                    <th style="padding: 12px; border: 1px solid #eee; text-align: right;">Сумма (₸)</th>
-                </tr>
-            </thead>
-            <tbody id="pdf-table-rows"></tbody>
+<div id="pdf-hide">
+    <div id="pdf-tpl" style="padding: 40px; font-family: sans-serif; background: #fff;">
+        <h2 style="color: #611fdb;">Смета: <span id="p-city"></span></h2>
+        <hr>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tbody id="p-body"></tbody>
         </table>
-
-        <div style="margin-top: 30px; text-align: right;">
-            <div style="font-size: 14px; color: #666;">ИТОГО К ОПЛАТЕ:</div>
-            <div style="font-size: 28px; font-weight: 900; color: #611fdb;" id="pdf-total-val"></div>
-        </div>
-
-        <div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px; font-size: 10px; color: #aaa; text-align: center;">
-            Данный документ сформирован ИИ-системой Qazaq Snab AI. <br>
-            Цены указаны на основе актуального мониторинга рынка.
-        </div>
+        <h3 style="text-align: right; margin-top: 30px;">ИТОГО: <span id="p-total"></span></h3>
     </div>
 </div>
 
@@ -113,10 +96,10 @@ async function calc() {
     const txt = document.getElementById("txt").value;
     const city = document.getElementById("city").value;
     const btn = document.getElementById("btn");
-    if(!txt) return alert("Введите данные");
+    if(!txt) return;
 
     btn.disabled = true;
-    btn.innerText = "ПОИСК ТОЧНЫХ ЦЕН...";
+    btn.innerText = "ЗАПРОС ЦЕН...";
 
     try {
         const res = await fetch("/api/calculate", {
@@ -125,74 +108,54 @@ async function calc() {
             body: JSON.stringify({ materials: txt, city: city })
         });
         const data = await res.json();
-        const items = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
-        lastItems = items;
+        lastItems = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
 
         let sum = 0;
         let html = "";
-        items.forEach(i => {
+        lastItems.forEach(i => {
             sum += Number(i.p);
-            html += `<tr>
-                <td><b>${i.n}</b><br><small style="color:#a0aec0">${i.m}</small></td>
-                <td style="text-align:right;">
-                    <span style="font-weight:800">${Number(i.p).toLocaleString()} ₸</span><br>
-                    <a href="${i.l}" class="buy-link" target="_blank">КУПИТЬ</a>
-                </td>
-            </tr>`;
+            html += `<div class="item-row">
+                <div class="item-info">
+                    <b>${i.n}</b>
+                    <span>${i.q} ${i.u} • ${i.m}</span>
+                </div>
+                <div class="item-price">
+                    <span class="price-val">${Number(i.p).toLocaleString()} ₸</span>
+                    <a href="${i.l}" target="_blank" class="buy-btn">НАЙТИ</a>
+                </div>
+            </div>`;
         });
 
-        document.getElementById("web-table-body").innerHTML = html;
+        document.getElementById("items-list").innerHTML = html;
         document.getElementById("total-val").innerText = sum.toLocaleString() + " ₸";
         document.getElementById("result").style.display = "block";
-    } catch (e) {
-        alert("Ошибка закупа. Попробуйте еще раз.");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "ПОЛУЧИТЬ ТОЧНУЮ СМЕТУ";
-    }
+    } catch (e) { alert("Ошибка!"); }
+    finally { btn.disabled = false; btn.innerText = "РАССЧИТАТЬ"; }
 }
 
 function downloadPDF() {
     const city = document.getElementById("city").value;
-    document.getElementById("pdf-city").innerText = city.toUpperCase();
-    
-    let html = "";
-    let sum = 0;
+    document.getElementById("p-city").innerText = city;
+    let h = "";
     lastItems.forEach(i => {
-        sum += Number(i.p);
-        html += `<tr>
-            <td style="padding:12px; border:1px solid #eee;"><b>${i.n}</b></td>
-            <td style="padding:12px; border:1px solid #eee; text-align:center;">${i.q} ${i.u}</td>
-            <td style="padding:12px; border:1px solid #eee; font-size:10px;">${i.m}<br><span style="color:#611fdb">${i.l.substring(0,30)}...</span></td>
-            <td style="padding:12px; border:1px solid #eee; text-align:right; font-weight:bold;">${Number(i.p).toLocaleString()}</td>
+        h += `<tr>
+            <td style="padding:10px; border-bottom:1px solid #eee;">${i.n} (${i.q} ${i.u})</td>
+            <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">${Number(i.p).toLocaleString()} ₸</td>
         </tr>`;
     });
+    document.getElementById("p-body").innerHTML = h;
+    document.getElementById("p-total").innerText = document.getElementById("total-val").innerText;
 
-    document.getElementById("pdf-table-rows").innerHTML = html;
-    document.getElementById("pdf-total-val").innerText = sum.toLocaleString() + " ₸";
-
-    const element = document.getElementById('pdf-template');
-    element.style.display = 'block';
-
-    const opt = {
-        margin: 0,
-        filename: `Smeta_${city}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save().then(() => {
-        element.style.display = 'none';
-    });
+    const tpl = document.getElementById("pdf-tpl");
+    html2pdf().from(tpl).save(`Smeta_${city}.pdf`);
 }
 
 function sendWA() {
-    let t = `*ТОЧНАЯ СМЕТА QAZAQ SNAB*\nГород: ${document.getElementById("city").value}\n\n`;
-    lastItems.forEach(i => t += `• ${i.n}: ${Number(i.p).toLocaleString()} ₸\n🛒 Ссылка: ${i.l}\n\n`);
+    let t = `*СМЕТА ${document.getElementById("city").value}*\n\n`;
+    lastItems.forEach(i => t += `• ${i.n}: ${Number(i.p).toLocaleString()} ₸\n🔍 Поиск: ${i.l}\n\n`);
     t += `*ИТОГО: ${document.getElementById("total-val").innerText}*`;
     window.open(`https://wa.me/?text=${encodeURIComponent(t)}`);
 }
 </script>
-
 </body>
 </html>
