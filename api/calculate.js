@@ -1,5 +1,9 @@
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
     const { materials, city } = req.body;
     const apiKey = "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";
 
@@ -12,20 +16,21 @@ export default async function handler(req, res) {
                 messages: [
                     { 
                         role: "system", 
-                        content: `Ты — профессиональный снабженец в Казахстане (${city}). Твоя цель — дать ОРИЕНТИРОВОЧНУЮ цену и ПРЯМУЮ ссылку на поиск товара.
+                        content: `Ты — профессиональный снабженец в Казахстане (${city}). 
+                        Твоя задача — дать ориентировочную смету.
                         
-                        ССЫЛКИ (СТРОГО):
-                        - 12 Месяцев: https://12.kz/search?search=[QUERY]
-                        - Строймарт: https://stroymart.kz/search?q=[QUERY]
-                        - Kaspi: https://kaspi.kz/shop/search/?q=[QUERY]+${city}
+                        ВАЖНО ПРО АССОРТИМЕНТ:
+                        - 12.kz и stroymart.kz — это DIY магазины. Там НЕТ кирпича, арматуры, песка, бетона. 
+                        - Если пользователь просит общестрой, ставь цену только для Kaspi, а для остальных пиши "н/д".
+                        
+                        ФОРМИРОВАНИЕ ССЫЛОК:
+                        - 12 Месяцев: https://12.kz/search?search=[НАЗВАНИЕ]
+                        - Строймарт: https://stroymart.kz/search?q=[НАЗВАНИЕ]
+                        - Kaspi: https://kaspi.kz/shop/search/?q=[НАЗВАНИЕ]+${city}
 
-                        ПРАВИЛА:
-                        1. ЦЕНА (p): Не округляй до сотен. Пиши реальную цену за 1 шт (например, 148, 4560).
-                        2. КОЛИЧЕСТВО (q): Строго бери из текста пользователя.
-                        3. Для каждой позиции дай предложения от 12.kz, stroymart.kz и Kaspi.
-                        
-                        JSON:
-                        [{"n": "Товар", "q": 300, "u": "шт", "offers": [{"m": "12 Месяцев", "p": 148, "l": "URL"}]}]`
+                        ЦЕНЫ: Не округляй сильно. Пиши реальные (148, 4560 и т.д.).
+                        Формат JSON:
+                        [{"n": "Название", "q": 10, "u": "шт", "offers": [{"m": "Kaspi", "p": 500, "l": "URL"}]}]`
                     },
                     { role: "user", content: materials }
                 ],
