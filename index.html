@@ -1,39 +1,7 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qazaq Snab AI Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root { --main: #611fdb; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        h2 { color: var(--main); text-align: center; margin-top: 0; }
-        
-        .label { font-size: 14px; font-weight: bold; color: #64748b; margin-bottom: 8px; display: block; }
-        select, textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; margin-bottom: 20px; outline: none; box-sizing: border-box; }
-        select:focus, textarea:focus { border-color: var(--main); }
-        
-        button { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; margin-bottom: 10px; }
-        .btn-calc { background: var(--main); color: white; }
-        .btn-wa { background: #25D366; color: white; }
-        .btn-pdf { background: #ef4444; color: white; }
-        
-        #result { display: none; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th { text-align: left; background: #f1f5f9; padding: 12px; font-size: 13px; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        .link { color: var(--main); text-decoration: none; font-size: 12px; font-weight: bold; }
-        .total-area { background: #f1f5f9; padding: 20px; border-radius: 12px; text-align: right; font-size: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-
 <div class="card">
     <h2>🇰🇿 Qazaq Snab AI Pro</h2>
     
-    <label class="label">ВЫБЕРИТЕ ГОРОД:</label>
+    <label class="label">ГОРОД:</label>
     <select id="city">
         <option value="Караганда">Караганда</option>
         <option value="Астана">Астана</option>
@@ -42,30 +10,32 @@
     </select>
 
     <label class="label">СПИСОК МАТЕРИАЛОВ:</label>
-    <textarea id="txt" placeholder="Напр: 10 мешков цемента, арматура 12мм 50 метров..."></textarea>
+    <textarea id="txt" placeholder="Напр: 5 мешков цемента, 20 метров арматуры..."></textarea>
     
-    <button id="btn" class="btn-calc" onclick="calc()">НАЙТИ ЛУЧШИЕ ЦЕНЫ</button>
+    <button id="btn" class="btn-calc" onclick="calc()">РАССЧИТАТЬ СМЕТУ</button>
 
     <div id="result">
-        <div id="pdf-content">
-            <h3 style="color: #611fdb;">Смета: <span id="res-city"></span></h3>
-            <table>
+        <div id="pdf-content" style="padding: 10px;">
+            <h3 style="color: #611fdb; border-bottom: 2px solid #611fdb; padding-bottom: 10px;">
+                Смета: <span id="res-city"></span> (Май 2026)
+            </h3>
+            <table style="width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr>
-                        <th>Товар</th>
-                        <th>Магазин</th>
-                        <th>Цена</th>
-                        <th>Ссылка</th>
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Наименование</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Кол-во</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Сумма</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Магазин</th>
                     </tr>
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
-            <div class="total-area">
+            <div id="total-area" style="background: #e8f0fe; padding: 15px; border-radius: 8px; text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px;">
                 ИТОГО: <span id="total-sum">0 ₸</span>
             </div>
         </div>
         
-        <button class="btn-wa" onclick="sendWA()">ОТПРАВИТЬ В WHATSAPP</button>
+        <button class="btn-wa" onclick="sendWA()">В WHATSAPP</button>
         <button class="btn-pdf" onclick="downloadPDF()">СОХРАНИТЬ PDF</button>
     </div>
 </div>
@@ -76,10 +46,10 @@ async function calc() {
     const city = document.getElementById("city").value;
     const btn = document.getElementById("btn");
     
-    if(!txt) return alert("Введите список материалов");
+    if(!txt) return alert("Введите список");
 
     btn.disabled = true;
-    btn.innerText = "ИЩЕМ ЛУЧШИЕ ПРЕДЛОЖЕНИЯ...";
+    btn.innerText = "ГРУППИРУЕМ И СЧИТАЕМ...";
 
     try {
         const res = await fetch("/api/calculate", {
@@ -95,12 +65,14 @@ async function calc() {
         let sum = 0;
         let html = "";
         items.forEach(i => {
-            sum += i.p;
+            sum += Number(i.p);
             html += `<tr>
-                <td><b>${i.n}</b></td>
-                <td>${i.m}</td>
-                <td>${i.p.toLocaleString()} ₸</td>
-                <td><a href="${i.l}" class="link" target="_blank">КУПИТЬ</a></td>
+                <td style="padding: 10px; border: 1px solid #eee;"><b>${i.n}</b></td>
+                <td style="padding: 10px; border: 1px solid #eee; text-align: center;">${i.q} ${i.u}</td>
+                <td style="padding: 10px; border: 1px solid #eee; text-align: right;">${Number(i.p).toLocaleString()} ₸</td>
+                <td style="padding: 10px; border: 1px solid #eee; font-size: 12px;">
+                    <a href="${i.l}" target="_blank" style="color: #611fdb; text-decoration: none;">${i.m} 🔗</a>
+                </td>
             </tr>`;
         });
 
@@ -109,19 +81,21 @@ async function calc() {
         document.getElementById("total-sum").innerText = sum.toLocaleString() + " ₸";
         document.getElementById("result").style.display = "block";
     } catch (e) {
-        alert("Ошибка связи с ИИ. Попробуйте еще раз.");
+        alert("Ошибка! Проверьте формат ввода.");
+        console.error(e);
     } finally {
         btn.disabled = false;
-        btn.innerText = "НАЙТИ ЛУЧШИЕ ЦЕНЫ";
+        btn.innerText = "РАССЧИТАТЬ СМЕТУ";
     }
 }
 
+// Функции downloadPDF и sendWA остаются такими же (они уже работают хорошо)
 function downloadPDF() {
     const element = document.getElementById('pdf-content');
-    const city = document.getElementById("city").value;
     html2pdf().from(element).set({
-        margin: 10,
-        filename: `Smeta_${city}.pdf`,
+        margin: 5,
+        filename: 'Smeta_QazaqSnab.pdf',
+        html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).save();
 }
@@ -130,12 +104,9 @@ function sendWA() {
     let t = `*Смета Qazaq Snab (${document.getElementById("city").value})*\n\n`;
     document.querySelectorAll("#table-body tr").forEach(r => {
         const td = r.querySelectorAll("td");
-        t += `• ${td[0].innerText}: ${td[2].innerText} (${td[1].innerText})\n`;
+        t += `• ${td[0].innerText}: ${td[1].innerText} — ${td[2].innerText}\n`;
     });
     t += `\n*ИТОГО: ${document.getElementById("total-sum").innerText}*`;
     window.open(`https://wa.me/?text=${encodeURIComponent(t)}`);
 }
 </script>
-
-</body>
-</html>
