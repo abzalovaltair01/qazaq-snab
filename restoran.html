@@ -2,133 +2,146 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>SmartResto — Умный Склад</title>
+    <title>RestoLogic — Умный склад</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; color: #333; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; font-size: 1.2em; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; margin: 0; padding: 20px; }
+        .dashboard { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
         
-        .product-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #fafafa; }
-        .low-stock { color: #d32f2f; font-weight: bold; background: #ffebee; padding: 2px 5px; border-radius: 4px; }
-        
-        .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; transition: 0.2s; width: 100%; margin-bottom: 10px; font-size: 16px; }
-        .btn:hover { background: #0056b3; }
-        .btn-order { background: #28a745; }
-        
-        .order-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .order-table th, .order-table td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
-        .empty-msg { color: #888; font-style: italic; }
-        
-        .recipe-info { font-size: 0.85em; color: #666; margin-bottom: 15px; }
+        /* Склад */
+        .stock-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
+        .status-low { color: #e74c3c; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Кнопки */
+        .btn { border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; margin-bottom: 10px; }
+        .btn-sell { background: #3498db; color: white; }
+        .btn-sell:hover { background: #2980b9; }
+        .btn-income { background: #2ecc71; color: white; }
+        .btn-income:hover { background: #27ae60; }
+
+        /* Таблица заказа */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: #f8f9fa; padding: 10px; font-size: 0.9rem; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        .badge { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<h1 style="text-align:center">📊 Ресторанный аналитик: Сток & Заказ</h1>
+<h1 style="text-align: center; margin-bottom: 30px;">🍎 RestoFlow: Синхронизация 1С & iiko</h1>
 
-<div class="grid">
+<div class="dashboard">
     <div class="card">
-        <h2>🛍️ Касса (iiko)</h2>
-        <p class="recipe-info">Состав "Картофель Фри": 200г картошки, 20мл масла, 5г соли.</p>
-        <button class="btn" onclick="sellDish('fries')">Выбить 1 порцию "Картофель Фри"</button>
-        <button class="btn" onclick="sellDish('fries', 5)">Выбить 5 порций (банкет)</button>
+        <h2>🛒 Кассовая зона (iiko)</h2>
+        <p style="color: #666; font-size: 0.9rem;">Нажми, чтобы продать блюдо и списать ингредиенты по ТТК</p>
+        <button class="btn btn-sell" onclick="processSale('burger')">🍔 Бургер (Котлета 150г, Булка 1, Сыр 20г)</button>
+        <button class="btn btn-sell" onclick="processSale('fries')">🍟 Картофель фри (Картошка 200г, Масло 20г)</button>
         
-        <hr>
-        <h2>📦 Приход (1С)</h2>
-        <button class="btn btn-order" onclick="restock()">Завезти 10кг картошки</button>
+        <div style="margin-top: 20px;">
+            <h2>🚚 Приход товара (из 1С)</h2>
+            <button class="btn btn-income" onclick="processIncome('potato', 10000)">Приход: Картофель +10 кг</button>
+            <button class="btn btn-income" onclick="processIncome('meat', 5000)">Приход: Мясо +5 кг</button>
+        </div>
     </div>
 
     <div class="card">
-        <h2>📦 Склад (Остатки)</h2>
-        <div id="stock-list">
+        <h2>📦 Склад (Реальное время)</h2>
+        <div id="stock-display">
             </div>
     </div>
 
     <div class="card" style="grid-column: span 2;">
-        <h2>📝 Сформированный заказ поставщику (Автоматически)</h2>
-        <table class="order-table">
+        <h2>📝 Автоматический лист закупа</h2>
+        <table>
             <thead>
                 <tr>
-                    <th>Продукт</th>
-                    <th>Текущий остаток</th>
+                    <th>Ингредиент</th>
+                    <th>Остаток</th>
                     <th>Мин. порог</th>
+                    <th>Статус</th>
                     <th>Рекомендация</th>
                 </tr>
             </thead>
-            <tbody id="order-body">
+            <tbody id="order-list">
                 </tbody>
         </table>
-        <div id="empty-order" class="empty-msg" style="margin-top:10px;">Всего достаточно. Таблица пуста.</div>
     </div>
 </div>
 
 <script>
-    // Наша база данных (имитация)
-    let stock = {
-        potato: { name: "Картофель", qty: 10000, unit: "г", threshold: 2000, refill: 10000 },
-        oil: { name: "Масло раст.", qty: 1000, unit: "мл", threshold: 300, refill: 5000 },
-        salt: { name: "Соль", qty: 500, unit: "г", threshold: 50, refill: 1000 }
-    };
-
-    // Рецептуры (Техкарты)
-    const recipes = {
-        fries: { potato: 200, oil: 20, salt: 5 }
+    // Наша "База данных"
+    const db = {
+        stock: {
+            potato: { name: "Картофель", qty: 3000, unit: "г", min: 2000 },
+            meat: { name: "Мясо (говядина)", qty: 4000, unit: "г", min: 1000 },
+            bun: { name: "Булки", qty: 20, unit: "шт", min: 5 },
+            cheese: { name: "Сыр", qty: 500, unit: "г", min: 200 },
+            oil: { name: "Масло", qty: 1000, unit: "мл", min: 300 }
+        },
+        ttk: {
+            burger: { meat: 150, bun: 1, cheese: 20 },
+            fries: { potato: 200, oil: 20 }
+        }
     };
 
     function updateUI() {
-        const stockList = document.getElementById('stock-list');
-        const orderBody = document.getElementById('order-body');
-        const emptyMsg = document.getElementById('empty-order');
+        // Обновляем склад
+        const stockDiv = document.getElementById('stock-display');
+        stockDiv.innerHTML = '';
         
-        stockList.innerHTML = '';
-        orderBody.innerHTML = '';
-        let needsOrder = false;
+        const orderTable = document.getElementById('order-list');
+        orderTable.innerHTML = '';
 
-        for (let key in stock) {
-            let item = stock[key];
-            let isLow = item.qty <= item.threshold;
-
-            // Обновляем список остатков
-            stockList.innerHTML += `
-                <div class="product-item">
+        for (let id in db.stock) {
+            const item = db.stock[id];
+            const isLow = item.qty <= item.min;
+            
+            // Рендерим склад
+            stockDiv.innerHTML += `
+                <div class="stock-item">
                     <span>${item.name}</span>
-                    <span class="${isLow ? 'low-stock' : ''}">${(item.qty/1000).toFixed(2)} ${item.unit === 'г' ? 'кг' : 'л'}</span>
+                    <span class="${isLow ? 'status-low' : ''}">
+                        ${item.qty} ${item.unit}
+                    </span>
                 </div>
             `;
 
-            // Если мало — добавляем в таблицу заказа
+            // Если остаток низкий, добавляем в закуп
             if (isLow) {
-                needsOrder = true;
-                orderBody.innerHTML += `
+                orderTable.innerHTML += `
                     <tr>
                         <td>${item.name}</td>
-                        <td>${(item.qty/1000).toFixed(2)}</td>
-                        <td>${item.threshold/1000}</td>
-                        <td style="color:green; font-weight:bold;">Заказать +${item.refill/1000} ${item.unit === 'г' ? 'кг' : 'л'}</td>
+                        <td>${item.qty} ${item.unit}</td>
+                        <td>${item.min} ${item.unit}</td>
+                        <td><span class="badge">Критично</span></td>
+                        <td><strong>Заказать +${item.min * 3}</strong></td>
                     </tr>
                 `;
             }
         }
-
-        emptyMsg.style.display = needsOrder ? 'none' : 'block';
     }
 
-    function sellDish(dishKey, count = 1) {
-        const recipe = recipes[dishKey];
-        for (let ingredient in recipe) {
-            stock[ingredient].qty -= recipe[ingredient] * count;
-            if (stock[ingredient].qty < 0) stock[ingredient].qty = 0;
+    function processSale(dishId) {
+        const recipe = db.ttk[dishId];
+        for (let ing in recipe) {
+            if (db.stock[ing]) {
+                db.stock[ing].qty -= recipe[ing];
+                if (db.stock[ing].qty < 0) db.stock[ing].qty = 0;
+            }
         }
         updateUI();
     }
 
-    function restock() {
-        stock.potato.qty += 10000;
+    function processIncome(ingId, amount) {
+        if (db.stock[ingId]) {
+            db.stock[ingId].qty += amount;
+        }
         updateUI();
     }
 
-    // Старт
+    // Инициализация
     updateUI();
 </script>
 
