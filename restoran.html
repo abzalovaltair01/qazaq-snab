@@ -2,147 +2,139 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>RestoLogic — Умный склад</title>
+    <title>StroiCalc — Интерактивный план</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; margin: 0; padding: 20px; }
-        .dashboard { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 350px; background: #252525; padding: 25px; border-right: 1px solid #333; box-shadow: 5px 0 15px rgba(0,0,0,0.3); z-index: 10; }
+        .canvas-area { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(#333 1px, transparent 1px); background-size: 30px 30px; }
         
-        /* Склад */
-        .stock-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f1f1; }
-        .status-low { color: #e74c3c; font-weight: bold; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .card { background: #333; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: #00d1b2; }
+        .param { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+        .value { font-weight: bold; color: #fff; }
 
-        /* Кнопки */
-        .btn { border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; margin-bottom: 10px; }
-        .btn-sell { background: #3498db; color: white; }
-        .btn-sell:hover { background: #2980b9; }
-        .btn-income { background: #2ecc71; color: white; }
-        .btn-income:hover { background: #27ae60; }
-
-        /* Таблица заказа */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; background: #f8f9fa; padding: 10px; font-size: 0.9rem; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        .badge { background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        #room {
+            background: rgba(0, 209, 178, 0.2);
+            border: 3px solid #00d1b2;
+            position: absolute;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            min-height: 50px;
+        }
+        .resize-handle {
+            width: 15px; height: 15px; background: white;
+            position: absolute; right: -7px; bottom: -7px;
+            cursor: nwse-resize; border-radius: 50%;
+        }
+        .dim-w { position: absolute; top: -25px; width: 100%; text-align: center; color: #00d1b2; font-size: 12px; }
+        .dim-h { position: absolute; left: -45px; height: 100%; display: flex; align-items: center; color: #00d1b2; font-size: 12px; }
+        
+        .total-price { font-size: 1.5rem; color: #ffdd57; text-align: center; margin-top: 10px; }
+        .hint { font-size: 0.8rem; color: #888; text-align: center; }
     </style>
 </head>
 <body>
 
-<h1 style="text-align: center; margin-bottom: 30px;">🍎 RestoFlow: Синхронизация 1С & iiko</h1>
-
-<div class="dashboard">
+<div class="sidebar">
+    <h2>🏗️ Расчет помещения</h2>
+    
     <div class="card">
-        <h2>🛒 Кассовая зона (iiko)</h2>
-        <p style="color: #666; font-size: 0.9rem;">Нажми, чтобы продать блюдо и списать ингредиенты по ТТК</p>
-        <button class="btn btn-sell" onclick="processSale('burger')">🍔 Бургер (Котлета 150г, Булка 1, Сыр 20г)</button>
-        <button class="btn btn-sell" onclick="processSale('fries')">🍟 Картофель фри (Картошка 200г, Масло 20г)</button>
-        
-        <div style="margin-top: 20px;">
-            <h2>🚚 Приход товара (из 1С)</h2>
-            <button class="btn btn-income" onclick="processIncome('potato', 10000)">Приход: Картофель +10 кг</button>
-            <button class="btn btn-income" onclick="processIncome('meat', 5000)">Приход: Мясо +5 кг</button>
+        <div class="param">Ширина: <span class="value" id="ui-w">3.0</span> м.</div>
+        <div class="param">Глубина: <span class="value" id="ui-h">4.0</span> м.</div>
+        <div class="param">Высота потолков: 
+            <select id="ceiling-h" onchange="calculate()">
+                <option value="2.5">2.5 м</option>
+                <option value="2.7">2.7 м</option>
+                <option value="3.0">3.0 м</option>
+            </select>
         </div>
     </div>
 
     <div class="card">
-        <h2>📦 Склад (Реальное время)</h2>
-        <div id="stock-display">
-            </div>
+        <h2>📊 Результаты:</h2>
+        <div class="param">Площадь пола: <span class="value" id="res-floor">12.0</span> м²</div>
+        <div class="param">Площадь стен: <span class="value" id="res-walls">35.0</span> м²</div>
+        <div class="param">Периметр (плинтус): <span class="value" id="res-perim">14.0</span> м.</div>
     </div>
 
-    <div class="card" style="grid-column: span 2;">
-        <h2>📝 Автоматический лист закупа</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ингредиент</th>
-                    <th>Остаток</th>
-                    <th>Мин. порог</th>
-                    <th>Статус</th>
-                    <th>Рекомендация</th>
-                </tr>
-            </thead>
-            <tbody id="order-list">
-                </tbody>
-        </table>
+    <div class="card">
+        <h2>💰 Эстимейт (черновой):</h2>
+        <div class="total-price" id="total-cost">145 000 ₸</div>
+        <p class="hint">Включает: смесь для пола, штукатурку, работу бригады.</p>
+    </div>
+    
+    <button style="width: 100%; padding: 15px; background: #00d1b2; border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer;">Скачать PDF смету</button>
+</div>
+
+<div class="canvas-area">
+    <div id="room" style="width: 200px; height: 250px;">
+        <div class="dim-w"><span id="dim-w-val">4.0</span> м</div>
+        <div class="dim-h"><span id="dim-h-val">5.0</span> м</div>
+        <span>Комната</span>
+        <div class="resize-handle" id="resizer"></div>
     </div>
 </div>
 
 <script>
-    // Наша "База данных"
-    const db = {
-        stock: {
-            potato: { name: "Картофель", qty: 3000, unit: "г", min: 2000 },
-            meat: { name: "Мясо (говядина)", qty: 4000, unit: "г", min: 1000 },
-            bun: { name: "Булки", qty: 20, unit: "шт", min: 5 },
-            cheese: { name: "Сыр", qty: 500, unit: "г", min: 200 },
-            oil: { name: "Масло", qty: 1000, unit: "мл", min: 300 }
-        },
-        ttk: {
-            burger: { meat: 150, bun: 1, cheese: 20 },
-            fries: { potato: 200, oil: 20 }
-        }
-    };
+    const room = document.getElementById('room');
+    const resizer = document.getElementById('resizer');
+    let isResizing = false;
 
-    function updateUI() {
-        // Обновляем склад
-        const stockDiv = document.getElementById('stock-display');
-        stockDiv.innerHTML = '';
+    // Масштаб: 1 метр = 50 пикселей
+    const scale = 50;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
         
-        const orderTable = document.getElementById('order-list');
-        orderTable.innerHTML = '';
+        const rect = room.getBoundingClientRect();
+        const newWidth = e.clientX - rect.left;
+        const newHeight = e.clientY - rect.top;
 
-        for (let id in db.stock) {
-            const item = db.stock[id];
-            const isLow = item.qty <= item.min;
-            
-            // Рендерим склад
-            stockDiv.innerHTML += `
-                <div class="stock-item">
-                    <span>${item.name}</span>
-                    <span class="${isLow ? 'status-low' : ''}">
-                        ${item.qty} ${item.unit}
-                    </span>
-                </div>
-            `;
+        if (newWidth > 50) room.style.width = newWidth + 'px';
+        if (newHeight > 50) room.style.height = newHeight + 'px';
+        
+        calculate();
+    });
 
-            // Если остаток низкий, добавляем в закуп
-            if (isLow) {
-                orderTable.innerHTML += `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td>${item.qty} ${item.unit}</td>
-                        <td>${item.min} ${item.unit}</td>
-                        <td><span class="badge">Критично</span></td>
-                        <td><strong>Заказать +${item.min * 3}</strong></td>
-                    </tr>
-                `;
-            }
-        }
+    window.addEventListener('mouseup', () => {
+        isResizing = false;
+    });
+
+    function calculate() {
+        const w = parseInt(room.style.width) / scale;
+        const h = parseInt(room.style.height) / scale;
+        const ceil = parseFloat(document.getElementById('ceiling-h').value);
+
+        // Расчеты
+        const floorArea = (w * h).toFixed(1);
+        const perimeter = (2 * (w + h)).toFixed(1);
+        const wallArea = (perimeter * ceil).toFixed(1);
+        
+        // Стоимость (примерная: 10к за м2 пола + 2к за м2 стен)
+        const cost = (floorArea * 10000 + wallArea * 2500).toLocaleString();
+
+        // Обновление UI
+        document.getElementById('ui-w').innerText = w.toFixed(1);
+        document.getElementById('ui-h').innerText = h.toFixed(1);
+        document.getElementById('dim-w-val').innerText = w.toFixed(1);
+        document.getElementById('dim-h-val').innerText = h.toFixed(1);
+        
+        document.getElementById('res-floor').innerText = floorArea;
+        document.getElementById('res-perim').innerText = perimeter;
+        document.getElementById('res-walls').innerText = wallArea;
+        document.getElementById('total-cost').innerText = cost + ' ₸';
     }
 
-    function processSale(dishId) {
-        const recipe = db.ttk[dishId];
-        for (let ing in recipe) {
-            if (db.stock[ing]) {
-                db.stock[ing].qty -= recipe[ing];
-                if (db.stock[ing].qty < 0) db.stock[ing].qty = 0;
-            }
-        }
-        updateUI();
-    }
-
-    function processIncome(ingId, amount) {
-        if (db.stock[ingId]) {
-            db.stock[ingId].qty += amount;
-        }
-        updateUI();
-    }
-
-    // Инициализация
-    updateUI();
+    // Первый запуск
+    calculate();
 </script>
 
 </body>
